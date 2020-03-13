@@ -75,9 +75,9 @@ func main() {
 
 // Product is something we sale
 type Product struct {
-	Name     string
-	Cost     int
-	Quantity int
+	Name     string `json:"name"`
+	Cost     int    `json:"cost"`
+	Quantity int    `json:"quantity"`
 }
 
 // ListProduct is a basic HTTP Handler.
