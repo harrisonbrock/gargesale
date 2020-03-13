@@ -25,7 +25,7 @@ func main() {
 
 	api := http.Server{
 		Addr:         "localhost:8000",
-		Handler:      http.HandlerFunc(Echo),
+		Handler:      http.HandlerFunc(ListProduct),
 		ReadTimeout:  5 * time.Second,
 		WriteTimeout: 5 * time.Second,
 	}
@@ -74,8 +74,8 @@ func main() {
 	}
 }
 
-// Echo is a basic HTTP Handler.
-func Echo(w http.ResponseWriter, r *http.Request) {
+// ListProduct is a basic HTTP Handler.
+func ListProduct(w http.ResponseWriter, r *http.Request) {
 
 	// Print a random number at the beginning and end of each request.
 	n := rand.Intn(1000)
