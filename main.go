@@ -96,6 +96,7 @@ func ListProduct(w http.ResponseWriter, r *http.Request) {
 		log.Println("error marshalling", err)
 		return
 	}
+	w.Header().Set("content-type", "application/json; charset=utf-8")
 	if _, err := w.Write(data); err != nil {
 		log.Println("error writing", err)
 	}
