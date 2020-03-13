@@ -3,8 +3,11 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"github.com/jmoiron/sqlx"
+	_ "github.com/lib/pq"
 	"log"
 	"net/http"
+	"net/url"
 	"os"
 	"os/signal"
 	"syscall"
@@ -18,6 +21,15 @@ func main() {
 
 	log.Printf("main : Started")
 	defer log.Println("main : Completed")
+
+	// =========================================================================
+	// Setup Dependencies
+	db, err := openDB()
+
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer db.Close()
 
 	// =========================================================================
 	// Start API Service
@@ -73,6 +85,22 @@ func main() {
 	}
 }
 
+func openDB() (*sqlx.DB, error) {
+	q := url.Values{}
+	q.Set("sslmode", "disable")
+	q.Set("timezone", "utc")
+
+	u := url.URL{
+		Scheme:   "postgres",
+		User:     url.UserPassword("postgres", "postgres"),
+		Host:     "localhost",
+		Path:     "postgres",
+		RawQuery: q.Encode(),
+	}
+
+	return sqlx.Open("postgres", u.String())
+}
+
 // Product is something we sale
 type Product struct {
 	Name     string `json:"name"`
@@ -84,9 +112,11 @@ type Product struct {
 func ListProduct(w http.ResponseWriter, r *http.Request) {
 
 	// Create a slice of products.
-	list := []Product{
-		{Name: "Comic Books", Cost: 75, Quantity: 50},
-		{Name: "McDonald's Toys", Cost: 25, Quantity: 150},
+	list := []Product{}
+
+	if true {
+		list = append(list, Product{Name: "Comic Books", Cost: 75, Quantity: 50})
+		list = append(list, Product{Name: "McDonald's Toys", Cost: 25, Quantity: 150})
 	}
 
 	data, err := json.Marshal(list)
