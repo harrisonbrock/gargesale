@@ -3,6 +3,8 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"flag"
+	"github.com/harrisonbrock/gargesale/schema"
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
 	"log"
@@ -31,12 +33,30 @@ func main() {
 	}
 	defer db.Close()
 
+	flag.Parse()
+
+	switch flag.Arg(0) {
+	case "migrate":
+		if err := schema.Migrate(db); err != nil {
+			log.Fatal("Applying migrations", err)
+		}
+		log.Println("Migrations complete")
+		return
+	case "seed":
+		if err := schema.Seed(db); err != nil {
+			log.Fatal("Applying seed data", err)
+		}
+		log.Println("Seed data inserted")
+		return
+	}
+
 	// =========================================================================
 	// Start API Service
 
+	ps := ProductService{db: db}
 	api := http.Server{
 		Addr:         "localhost:8000",
-		Handler:      http.HandlerFunc(ListProduct),
+		Handler:      http.HandlerFunc(ps.List),
 		ReadTimeout:  5 * time.Second,
 		WriteTimeout: 5 * time.Second,
 	}
@@ -103,20 +123,30 @@ func openDB() (*sqlx.DB, error) {
 
 // Product is something we sale
 type Product struct {
-	Name     string `json:"name"`
-	Cost     int    `json:"cost"`
-	Quantity int    `json:"quantity"`
+	ID          string    `db:"product_id" json:"id"`
+	Name        string    `json:"name"`
+	Cost        int       `json:"cost"`
+	Quantity    int       `json:"quantity"`
+	DateCreated time.Time `db:"date_created" json:"date_created"`
+	DateUpdated time.Time `db:"date_updated" json:"date_updated"`
+}
+
+// ProductService has handler methods for dealing with Products.
+type ProductService struct {
+	db *sqlx.DB
 }
 
 // ListProduct is a basic HTTP Handler.
-func ListProduct(w http.ResponseWriter, r *http.Request) {
+func (p *ProductService) List(w http.ResponseWriter, r *http.Request) {
 
 	// Create a slice of products.
 	list := []Product{}
 
-	if true {
-		list = append(list, Product{Name: "Comic Books", Cost: 75, Quantity: 50})
-		list = append(list, Product{Name: "McDonald's Toys", Cost: 25, Quantity: 150})
+	const q = `SELECT * FROM products`
+	if err := p.db.Select(&list, q); err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		log.Println("error querying data source", err)
+		return
 	}
 
 	data, err := json.Marshal(list)
