@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"github.com/harrisonbrock/gargesale/internal/platform/database"
+	"github.com/harrisonbrock/gargesale/internal/product"
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
 	"log"
@@ -86,16 +87,6 @@ func main() {
 	}
 }
 
-// Product is something we sale
-type Product struct {
-	ID          string    `db:"product_id" json:"id"`
-	Name        string    `json:"name"`
-	Cost        int       `json:"cost"`
-	Quantity    int       `json:"quantity"`
-	DateCreated time.Time `db:"date_created" json:"date_created"`
-	DateUpdated time.Time `db:"date_updated" json:"date_updated"`
-}
-
 // ProductService has handler methods for dealing with Products.
 type ProductService struct {
 	db *sqlx.DB
@@ -104,11 +95,8 @@ type ProductService struct {
 // ListProduct is a basic HTTP Handler.
 func (p *ProductService) List(w http.ResponseWriter, r *http.Request) {
 
-	// Create a slice of products.
-	list := []Product{}
-
-	const q = `SELECT * FROM products`
-	if err := p.db.Select(&list, q); err != nil {
+	list, err := product.List(p.db)
+	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		log.Println("error querying data source", err)
 		return
