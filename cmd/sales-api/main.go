@@ -2,10 +2,8 @@ package main
 
 import (
 	"context"
-	"encoding/json"
+	"github.com/harrisonbrock/gargesale/cmd/sales-api/internal/handlers"
 	"github.com/harrisonbrock/gargesale/internal/platform/database"
-	"github.com/harrisonbrock/gargesale/internal/product"
-	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
 	"log"
 	"net/http"
@@ -35,7 +33,7 @@ func main() {
 	// =========================================================================
 	// Start API Service
 
-	ps := ProductService{db: db}
+	ps := handlers.Products{DB: db}
 	api := http.Server{
 		Addr:         "localhost:8000",
 		Handler:      http.HandlerFunc(ps.List),
@@ -85,35 +83,4 @@ func main() {
 			log.Fatalf("main : could not stop server gracefully : %v", err)
 		}
 	}
-}
-
-// ProductService has handler methods for dealing with Products.
-type ProductService struct {
-	db *sqlx.DB
-}
-
-// ListProduct is a basic HTTP Handler.
-func (p *ProductService) List(w http.ResponseWriter, r *http.Request) {
-
-	list, err := product.List(p.db)
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		log.Println("error querying data source", err)
-		return
-	}
-
-	data, err := json.Marshal(list)
-
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		log.Println("error marshalling", err)
-		return
-	}
-
-	w.Header().Set("content-type", "application/json; charset=utf-8")
-	w.WriteHeader(http.StatusOK)
-	if _, err := w.Write(data); err != nil {
-		log.Println("error writing", err)
-	}
-
 }
