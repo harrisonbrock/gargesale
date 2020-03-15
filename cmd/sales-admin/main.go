@@ -6,11 +6,18 @@ import (
 	"github.com/harrisonbrock/gargesale/internal/platform/database"
 	"github.com/harrisonbrock/gargesale/internal/schema"
 	_ "github.com/lib/pq"
+	"github.com/pkg/errors"
 	"log"
 	"os"
 )
 
 func main() {
+	if err := run(); err != nil {
+		log.Fatal(err)
+	}
+}
+
+func run() error {
 
 	// =========================================================================
 	// Configuration
@@ -30,10 +37,10 @@ func main() {
 		if err == conf.ErrHelpWanted {
 			usage, err := conf.Usage("SALES", &cfg)
 			if err != nil {
-				log.Fatalf("main : generating usage : %v", err)
+				return errors.Wrap(err, "main : generating usage")
 			}
 			fmt.Println(usage)
-			return
+			return nil
 		}
 		log.Fatalf("error: parsing config: %s", err)
 	}
@@ -47,25 +54,24 @@ func main() {
 		DisableTLS: cfg.DB.DisableTLS,
 	})
 	if err != nil {
-		log.Fatalf("error: connecting to db: %s", err)
+		return errors.Wrap(err, "opening database")
 	}
 	defer db.Close()
 
 	switch cfg.Args.Num(0) {
 	case "migrate":
 		if err := schema.Migrate(db); err != nil {
-			log.Println("error applying migrations", err)
-			os.Exit(1)
+			return errors.Wrap(err, "applying migrations")
 		}
 		fmt.Println("Migrations complete")
-		return
+		return nil
 
 	case "seed":
 		if err := schema.Seed(db); err != nil {
-			log.Println("error seeding database", err)
-			os.Exit(1)
+			return errors.Wrap(err, "seeding database")
 		}
 		fmt.Println("Seed data complete")
-		return
+		return nil
 	}
+	return nil
 }
