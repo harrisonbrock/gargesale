@@ -3,13 +3,11 @@ package main
 import (
 	"context"
 	"encoding/json"
-	"flag"
-	"github.com/harrisonbrock/gargesale/schema"
+	"github.com/harrisonbrock/gargesale/internal/platform/database"
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
 	"log"
 	"net/http"
-	"net/url"
 	"os"
 	"os/signal"
 	"syscall"
@@ -26,29 +24,12 @@ func main() {
 
 	// =========================================================================
 	// Setup Dependencies
-	db, err := openDB()
+	db, err := database.Open()
 
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer db.Close()
-
-	flag.Parse()
-
-	switch flag.Arg(0) {
-	case "migrate":
-		if err := schema.Migrate(db); err != nil {
-			log.Fatal("Applying migrations", err)
-		}
-		log.Println("Migrations complete")
-		return
-	case "seed":
-		if err := schema.Seed(db); err != nil {
-			log.Fatal("Applying seed data", err)
-		}
-		log.Println("Seed data inserted")
-		return
-	}
 
 	// =========================================================================
 	// Start API Service
@@ -103,22 +84,6 @@ func main() {
 			log.Fatalf("main : could not stop server gracefully : %v", err)
 		}
 	}
-}
-
-func openDB() (*sqlx.DB, error) {
-	q := url.Values{}
-	q.Set("sslmode", "disable")
-	q.Set("timezone", "utc")
-
-	u := url.URL{
-		Scheme:   "postgres",
-		User:     url.UserPassword("postgres", "postgres"),
-		Host:     "localhost",
-		Path:     "postgres",
-		RawQuery: q.Encode(),
-	}
-
-	return sqlx.Open("postgres", u.String())
 }
 
 // Product is something we sale
