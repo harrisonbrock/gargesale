@@ -10,16 +10,18 @@ import (
 
 // Products has handler methods for dealing with Products.
 type Products struct {
-	DB *sqlx.DB
+	DB  *sqlx.DB
+	Log *log.Logger
 }
 
 // ListProduct is a basic HTTP Handler.
 func (p *Products) List(w http.ResponseWriter, r *http.Request) {
 
+	p.Log.Println("TESTING")
 	list, err := product.List(p.DB)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
-		log.Println("error querying data source", err)
+		p.Log.Println("error querying data source", err)
 		return
 	}
 
@@ -27,14 +29,14 @@ func (p *Products) List(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
-		log.Println("error marshalling", err)
+		p.Log.Println("error marshalling", err)
 		return
 	}
 
 	w.Header().Set("content-type", "application/json; charset=utf-8")
 	w.WriteHeader(http.StatusOK)
 	if _, err := w.Write(data); err != nil {
-		log.Println("error writing", err)
+		p.Log.Println("error writing", err)
 	}
 
 }

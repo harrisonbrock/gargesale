@@ -23,6 +23,8 @@ func main() {
 }
 func run() error {
 
+	log := log.New(os.Stdout, "SALES : ", log.LstdFlags)
+
 	var cfg struct {
 		Web struct {
 			Address         string        `conf:"default:localhost:8000"`
@@ -84,7 +86,7 @@ func run() error {
 	// =========================================================================
 	// Start API Service
 
-	ps := handlers.Products{DB: db}
+	ps := handlers.Products{DB: db, Log: log}
 	api := http.Server{
 		Addr:         cfg.Web.Address,
 		Handler:      http.HandlerFunc(ps.List),
