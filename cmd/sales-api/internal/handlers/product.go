@@ -1,8 +1,8 @@
 package handlers
 
 import (
-	"encoding/json"
 	"github.com/go-chi/chi"
+	"github.com/harrisonbrock/gargesale/internal/platform/web"
 	"github.com/harrisonbrock/gargesale/internal/product"
 	"github.com/jmoiron/sqlx"
 	"log"
@@ -26,20 +26,10 @@ func (p *Products) List(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	data, err := json.Marshal(list)
-
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		p.Log.Println("error marshalling", err)
+	if err := web.Response(w, list, http.StatusOK); err != nil {
+		p.Log.Println("error responding", err)
 		return
 	}
-
-	w.Header().Set("content-type", "application/json; charset=utf-8")
-	w.WriteHeader(http.StatusOK)
-	if _, err := w.Write(data); err != nil {
-		p.Log.Println("error writing", err)
-	}
-
 }
 
 func (p *Products) Retrieve(w http.ResponseWriter, r *http.Request) {
@@ -53,18 +43,9 @@ func (p *Products) Retrieve(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	data, err := json.Marshal(prod)
-
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		p.Log.Println("error marshalling", err)
+	if err := web.Response(w, prod, http.StatusOK); err != nil {
+		p.Log.Println("error responding", err)
 		return
-	}
-
-	w.Header().Set("content-type", "application/json; charset=utf-8")
-	w.WriteHeader(http.StatusOK)
-	if _, err := w.Write(data); err != nil {
-		p.Log.Println("error writing", err)
 	}
 }
 
@@ -72,7 +53,7 @@ func (p *Products) Retrieve(w http.ResponseWriter, r *http.Request) {
 func (p *Products) Create(w http.ResponseWriter, r *http.Request) {
 
 	var np product.NewProduct
-	if err := json.NewDecoder(r.Body).Decode(&np); err != nil {
+	if err := web.Decode(r, &np); err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		p.Log.Println(err)
 		return
@@ -85,17 +66,8 @@ func (p *Products) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	data, err := json.Marshal(prod)
-
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		p.Log.Println("error marshalling", err)
+	if err := web.Response(w, prod, http.StatusCreated); err != nil {
+		p.Log.Println("error responding", err)
 		return
-	}
-
-	w.Header().Set("content-type", "application/json; charset=utf-8")
-	w.WriteHeader(http.StatusCreated)
-	if _, err := w.Write(data); err != nil {
-		p.Log.Println("error writing", err)
 	}
 }
