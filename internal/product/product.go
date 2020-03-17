@@ -1,7 +1,10 @@
 package product
 
 import (
+	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
+	"github.com/pkg/errors"
+	"time"
 )
 
 // List returns all know Products.
@@ -32,5 +35,25 @@ func Retrieve(db *sqlx.DB, id string) (*Product, error) {
 		return nil, err
 	}
 
+	return &p, nil
+}
+
+// Create makes a new Product.
+func Create(db *sqlx.DB, np NewProduct, now time.Time) (*Product, error) {
+	p := Product{
+		ID:          uuid.New().String(),
+		Name:        np.Name,
+		Cost:        np.Cost,
+		Quantity:    np.Quantity,
+		DateCreated: now,
+		DateUpdated: now,
+	}
+	const q = `INSERT INTO products
+	(product_id, name, cost, quantity, date_created, date_updated)
+	VALUES($1, $2, $3, $4, $5, $6)`
+
+	if _, err := db.Exec(q, p.ID, p.Name, p.Cost, p.Quantity, p.DateCreated, p.DateUpdated); err != nil {
+		return nil, errors.Wrap(err, "inserting product")
+	}
 	return &p, nil
 }
