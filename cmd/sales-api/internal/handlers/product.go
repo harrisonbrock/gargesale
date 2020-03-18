@@ -5,6 +5,7 @@ import (
 	"github.com/harrisonbrock/gargesale/internal/platform/web"
 	"github.com/harrisonbrock/gargesale/internal/product"
 	"github.com/jmoiron/sqlx"
+	"github.com/pkg/errors"
 	"log"
 	"net/http"
 	"time"
@@ -35,7 +36,14 @@ func (p *Products) Retrieve(w http.ResponseWriter, r *http.Request) error {
 
 	prod, err := product.Retrieve(p.DB, id)
 	if err != nil {
-		return err
+		switch err {
+		case product.ErrNotFound:
+			return web.NewRequestError(err, http.StatusNotFound)
+		case product.ErrInvalidId:
+			return web.NewRequestError(err, http.StatusBadRequest)
+		default:
+			return errors.Wrapf(err, "looking for product %q", id)
+		}
 	}
 
 	return web.Response(w, prod, http.StatusOK)

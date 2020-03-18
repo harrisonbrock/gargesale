@@ -1,10 +1,16 @@
 package product
 
 import (
+	"database/sql"
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
 	"github.com/pkg/errors"
 	"time"
+)
+
+var (
+	ErrNotFound  = errors.New("product not found")
+	ErrInvalidId = errors.New("id provided not a valid UUID")
 )
 
 // List returns all know Products.
@@ -24,6 +30,10 @@ func List(db *sqlx.DB) ([]Product, error) {
 
 func Retrieve(db *sqlx.DB, id string) (*Product, error) {
 
+	if _, err := uuid.Parse(id); err != nil {
+		return nil, ErrInvalidId
+	}
+
 	// Create a slice of products.
 	var p Product
 
@@ -32,6 +42,10 @@ func Retrieve(db *sqlx.DB, id string) (*Product, error) {
 	WHERE product_id = $1`
 
 	if err := db.Get(&p, q, id); err != nil {
+
+		if err == sql.ErrNoRows {
+			return nil, ErrNotFound
+		}
 		return nil, err
 	}
 
