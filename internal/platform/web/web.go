@@ -27,9 +27,10 @@ func (a *App) Handle(method, pattern string, h Handler) {
 
 	fn := func(w http.ResponseWriter, r *http.Request) {
 		if err := h(w, r); err != nil {
-			resp := ErrorResponse{Error: err.Error()}
-			if err := Response(w, resp, http.StatusInternalServerError); err != nil {
-				a.log.Println(err)
+			a.log.Printf("ERROR : %v\n", err)
+
+			if err := RespondError(w, err); err != nil {
+				a.log.Printf("ERROR : %v", err)
 			}
 		}
 	}

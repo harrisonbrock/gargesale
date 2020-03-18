@@ -22,3 +22,14 @@ func Response(w http.ResponseWriter, val interface{}, status int) error {
 
 	return nil
 }
+
+func RespondError(w http.ResponseWriter, err error) error {
+
+	if webErr, ok := err.(*Error); ok {
+		resp := ErrorResponse{Error: webErr.Err.Error()}
+		return Response(w, resp, webErr.Status)
+	}
+
+	resp := ErrorResponse{Error: http.StatusText(http.StatusInternalServerError)}
+	return Response(w, resp, http.StatusInternalServerError)
+}
