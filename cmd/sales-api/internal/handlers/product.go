@@ -20,7 +20,7 @@ type Products struct {
 // ListProduct is a basic HTTP Handler.
 func (p *Products) List(w http.ResponseWriter, r *http.Request) error {
 
-	list, err := product.List(p.DB)
+	list, err := product.List(r.Context(), p.DB)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		p.Log.Println("error querying data source", err)
@@ -34,7 +34,7 @@ func (p *Products) Retrieve(w http.ResponseWriter, r *http.Request) error {
 
 	id := chi.URLParam(r, "id")
 
-	prod, err := product.Retrieve(p.DB, id)
+	prod, err := product.Retrieve(r.Context(), p.DB, id)
 	if err != nil {
 		switch err {
 		case product.ErrNotFound:
@@ -57,7 +57,7 @@ func (p *Products) Create(w http.ResponseWriter, r *http.Request) error {
 		return err
 	}
 
-	prod, err := product.Create(p.DB, np, time.Now())
+	prod, err := product.Create(r.Context(), p.DB, np, time.Now())
 	if err != nil {
 		return err
 	}
