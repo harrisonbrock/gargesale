@@ -34,7 +34,7 @@ func TestProducts(t *testing.T) {
 
 	log := log.New(os.Stderr, "TEST : ", log.LstdFlags|log.Lmicroseconds|log.Lshortfile)
 
-	tests := ProductTests{app: handlers.API(db, log)}
+	tests := ProductTests{app: handlers.API(log, db)}
 
 	t.Run("List", tests.List)
 	t.Run("ProductCRUD", tests.ProductCRUD)
