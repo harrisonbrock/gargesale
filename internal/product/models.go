@@ -18,3 +18,17 @@ type NewProduct struct {
 	Cost     int    `json:"cost"`
 	Quantity int    `json:"quantity"`
 }
+
+type Sale struct {
+	ID          string    `db:"sales_id" json:"id"`
+	ProductID   string    `db:"product_id" json:"product_id"`
+	Quantity    int       `db:"quantity" json:"quantity"`
+	Paid        int       `db:"paid" json:"paid"`
+	DateCreated time.Time `db:"date_created" json:"date_created"`
+	DateUpdated time.Time `db:"date_updated" json:"date_updated"`
+}
+
+type NewSale struct {
+	Quantity int `json:"quantity"`
+	Paid     int `json:"paid"`
+}
