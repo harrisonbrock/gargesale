@@ -20,7 +20,14 @@ func List(ctx context.Context, db *sqlx.DB) ([]Product, error) {
 	// Create a slice of products.
 	list := []Product{}
 
-	const q = `SELECT * FROM products`
+	const q = `SELECT 
+	p.product_id, p.name, p.cost, p.quantity,
+    coalesce(sum(s.quantity),0) as sold, coalesce(sum(s.paid), 0) as revenue,
+    p.date_created, p.date_updated
+	FROM products as p
+	LEFT JOIN sales As s on p.product_id = s.product_id
+	group by p.product_id
+	`
 
 	if err := db.SelectContext(ctx, &list, q); err != nil {
 		return nil, err
@@ -38,9 +45,15 @@ func Retrieve(ctx context.Context, db *sqlx.DB, id string) (*Product, error) {
 	// Create a slice of products.
 	var p Product
 
-	const q = `SELECT product_id, name, cost, quantity, date_updated, date_created 
-	FROM products 
-	WHERE product_id = $1`
+	const q = `SELECT 
+       p.product_id, p.name, p.cost, p.quantity,
+       coalesce(sum(s.quantity), 0) as sold, coalesce(sum(s.paid), 0) as revenue,
+       p.date_updated, p.date_created
+	FROM products as p 
+	left join sales s on p.product_id = s.product_id
+	WHERE p.product_id = $1
+	group by p.product_id
+	`
 
 	if err := db.GetContext(ctx, &p, q, id); err != nil {
 
