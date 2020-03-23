@@ -6,30 +6,46 @@ import (
 	"net/http"
 )
 
-func Response(w http.ResponseWriter, val interface{}, status int) error {
+func Respond(w http.ResponseWriter, data interface{}, statusCode int) error {
 
-	data, err := json.Marshal(val)
-
+	// Convert the response value to JSON.
+	res, err := json.Marshal(data)
 	if err != nil {
-		return errors.Wrap(err, "marshaling value to json")
+		return err
 	}
 
-	w.Header().Set("content-type", "application/json; charset=utf-8")
-	w.WriteHeader(status)
-	if _, err := w.Write(data); err != nil {
-		return errors.Wrap(err, "writing to client")
+	// Respond with the provided JSON.
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
+	w.WriteHeader(statusCode)
+	if _, err := w.Write(res); err != nil {
+		return err
 	}
 
 	return nil
 }
 
+// RespondError sends an error reponse back to the client.
 func RespondError(w http.ResponseWriter, err error) error {
 
-	if webErr, ok := err.(*Error); ok {
-		resp := ErrorResponse{Error: webErr.Err.Error()}
-		return Response(w, resp, webErr.Status)
+	// If the error was of the type *Error, the handler has
+	// a specific status code and error to return.
+	if webErr, ok := errors.Cause(err).(*Error); ok {
+		er := ErrorResponse{
+			Error:  webErr.Err.Error(),
+			Fields: webErr.Fields,
+		}
+		if err := Respond(w, er, webErr.Status); err != nil {
+			return err
+		}
+		return nil
 	}
 
-	resp := ErrorResponse{Error: http.StatusText(http.StatusInternalServerError)}
-	return Response(w, resp, http.StatusInternalServerError)
+	// If not, the handler sent any arbitrary error value so use 500.
+	er := ErrorResponse{
+		Error: http.StatusText(http.StatusInternalServerError),
+	}
+	if err := Respond(w, er, http.StatusInternalServerError); err != nil {
+		return err
+	}
+	return nil
 }
