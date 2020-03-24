@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	_ "expvar"
 	"fmt"
 	"github.com/harrisonbrock/gargesale/cmd/sales-api/internal/handlers"
 	"github.com/harrisonbrock/gargesale/internal/platform/conf"
