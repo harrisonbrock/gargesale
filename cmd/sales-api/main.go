@@ -10,6 +10,7 @@ import (
 	"github.com/pkg/errors"
 	"log"
 	"net/http"
+	_ "net/http/pprof"
 	"os"
 	"os/signal"
 	"syscall"
@@ -28,6 +29,7 @@ func run() error {
 	var cfg struct {
 		Web struct {
 			Address         string        `conf:"default:localhost:8000"`
+			Debug           string        `conf:"default:localhost:6060"`
 			ReadTimeout     time.Duration `conf:"default:5s"`
 			WriteTimeout    time.Duration `conf:"default:5s"`
 			ShutdownTimeout time.Duration `conf:"default:5s"`
@@ -58,6 +60,8 @@ func run() error {
 
 	// =========================================================================
 
+	// =========================================================================
+
 	// App Starting
 
 	log.Printf("main : Started")
@@ -82,6 +86,14 @@ func run() error {
 		return errors.Wrap(err, "opening db")
 	}
 	defer db.Close()
+
+	// =========================================================================
+	// Start Debug Service
+	go func() {
+		log.Printf("main : Debug listening on %s", cfg.Web.Debug)
+		err := http.ListenAndServe(cfg.Web.Debug, http.DefaultServeMux)
+		log.Printf("main : Debug service ended %v", err)
+	}()
 
 	// =========================================================================
 	// Start API Service
