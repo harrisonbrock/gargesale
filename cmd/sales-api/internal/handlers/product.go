@@ -27,7 +27,7 @@ func (p *Products) List(w http.ResponseWriter, r *http.Request) error {
 		return err
 	}
 
-	return web.Response(w, list, http.StatusOK)
+	return web.Respond(w, list, http.StatusOK)
 }
 
 func (p *Products) Retrieve(w http.ResponseWriter, r *http.Request) error {
@@ -46,7 +46,7 @@ func (p *Products) Retrieve(w http.ResponseWriter, r *http.Request) error {
 		}
 	}
 
-	return web.Response(w, prod, http.StatusOK)
+	return web.Respond(w, prod, http.StatusOK)
 }
 
 // Create decode json document from a POST Request
@@ -62,7 +62,7 @@ func (p *Products) Create(w http.ResponseWriter, r *http.Request) error {
 		return err
 	}
 
-	return web.Response(w, prod, http.StatusCreated)
+	return web.Respond(w, prod, http.StatusCreated)
 }
 
 func (p *Products) AddSale(w http.ResponseWriter, r *http.Request) error {
@@ -78,7 +78,7 @@ func (p *Products) AddSale(w http.ResponseWriter, r *http.Request) error {
 		return errors.Wrap(err, "adding new sale")
 	}
 
-	return web.Response(w, sale, http.StatusCreated)
+	return web.Respond(w, sale, http.StatusCreated)
 }
 
 // ListSales gets all sales for a particular product.
@@ -90,7 +90,7 @@ func (p *Products) ListSales(w http.ResponseWriter, r *http.Request) error {
 		return errors.Wrap(err, "getting sales list")
 	}
 
-	return web.Response(w, list, http.StatusOK)
+	return web.Respond(w, list, http.StatusOK)
 }
 
 func (p *Products) Update(w http.ResponseWriter, r *http.Request) error {
