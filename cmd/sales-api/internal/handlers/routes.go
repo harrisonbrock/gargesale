@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"github.com/harrisonbrock/gargesale/internal/mid"
 	"github.com/harrisonbrock/gargesale/internal/platform/web"
 	"github.com/jmoiron/sqlx"
 	"log"
@@ -9,7 +10,7 @@ import (
 
 func API(logger *log.Logger, db *sqlx.DB) http.Handler {
 
-	app := web.NewApp(logger)
+	app := web.NewApp(logger, mid.Errors(logger))
 
 	{
 		c := Check{DB: db}

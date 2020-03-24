@@ -30,11 +30,12 @@ func (a *App) Handle(method, pattern string, h Handler) {
 	h = wrapMiddleware(a.mw, h)
 	fn := func(w http.ResponseWriter, r *http.Request) {
 		if err := h(w, r); err != nil {
-			a.log.Printf("ERROR : %v\n", err)
-
-			if err := RespondError(w, err); err != nil {
-				a.log.Printf("ERROR : %v", err)
-			}
+			//a.log.Printf("ERROR : %v\n", err)
+			//
+			//if err := RespondError(w, err); err != nil {
+			//	a.log.Printf("ERROR : %v", err)
+			//}
+			a.log.Printf("Unhandled error: %+v", err)
 		}
 	}
 	a.mux.MethodFunc(method, pattern, fn)
