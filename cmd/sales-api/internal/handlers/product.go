@@ -114,3 +114,18 @@ func (p *Products) Update(w http.ResponseWriter, r *http.Request) error {
 
 	return web.Respond(w, nil, http.StatusNoContent)
 }
+
+func (p *Products) Delete(w http.ResponseWriter, r *http.Request) error {
+
+	id := chi.URLParam(r, "id")
+
+	if err := product.Delete(r.Context(), p.DB, id); err != nil {
+		switch err {
+		case product.ErrInvalidId:
+			return web.NewRequestError(err, http.StatusBadRequest)
+		default:
+			return errors.Wrapf(err, "deleting product %q", id)
+		}
+	}
+	return web.Respond(w, nil, http.StatusNoContent)
+}
