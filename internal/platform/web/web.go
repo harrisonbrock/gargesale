@@ -13,18 +13,21 @@ type Handler func(w http.ResponseWriter, r *http.Request) error
 type App struct {
 	mux *chi.Mux
 	log *log.Logger
+	mw  []Middleware
 }
 
 // NewApp knows how to construct a internal state for App.
-func NewApp(logger *log.Logger) *App {
+func NewApp(logger *log.Logger, mw ...Middleware) *App {
 	return &App{
 		mux: chi.NewRouter(),
 		log: logger,
+		mw:  mw,
 	}
 }
 
 func (a *App) Handle(method, pattern string, h Handler) {
 
+	h = wrapMiddleware(a.mw, h)
 	fn := func(w http.ResponseWriter, r *http.Request) {
 		if err := h(w, r); err != nil {
 			a.log.Printf("ERROR : %v\n", err)
