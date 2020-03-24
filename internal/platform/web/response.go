@@ -7,6 +7,10 @@ import (
 )
 
 func Respond(w http.ResponseWriter, data interface{}, statusCode int) error {
+	if statusCode == http.StatusNoContent {
+		w.WriteHeader(statusCode)
+		return nil
+	}
 
 	// Convert the response value to JSON.
 	res, err := json.Marshal(data)

@@ -6,6 +6,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
 	"github.com/pkg/errors"
+	"log"
 	"time"
 )
 
@@ -86,11 +87,12 @@ func Create(ctx context.Context, db *sqlx.DB, np NewProduct, now time.Time) (*Pr
 	return &p, nil
 }
 
-func Update(ctx context.Context, id string, db *sqlx.DB, update UpdateProduct, now time.Time) error {
+func Update(ctx context.Context, db *sqlx.DB, id string, update UpdateProduct, now time.Time) error {
 
 	p, err := Retrieve(ctx, db, id)
 
 	if err != nil {
+		log.Fatal("error updated")
 		return err
 	}
 
@@ -108,12 +110,12 @@ func Update(ctx context.Context, id string, db *sqlx.DB, update UpdateProduct, n
 
 	p.DateUpdated = now
 
-	const q = `UPDATE products SET
-		"name" = $2,
-		"cost" = $3,
-		"quantity" = $4,
-		"date_updated" = $5
-		WHERE product_id = $1`
+	const q = `UPDATE products SET 
+                    "name" = $2, "cost" = $3,
+					"quantity" = $4,
+                    "date_updated" = $5
+					WHERE product_id = $1`
+
 	_, err = db.ExecContext(ctx, q, id,
 		p.Name, p.Cost,
 		p.Quantity, p.DateUpdated,

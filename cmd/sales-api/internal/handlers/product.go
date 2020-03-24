@@ -101,7 +101,7 @@ func (p *Products) Update(w http.ResponseWriter, r *http.Request) error {
 		return errors.Wrap(err, "decoding product update")
 	}
 
-	if err := product.Update(r.Context(), p.db, id, update, time.Now()); err != nil {
+	if err := product.Update(r.Context(), p.DB, id, update, time.Now()); err != nil {
 		switch err {
 		case product.ErrNotFound:
 			return web.NewRequestError(err, http.StatusNotFound)
@@ -112,5 +112,5 @@ func (p *Products) Update(w http.ResponseWriter, r *http.Request) error {
 		}
 	}
 
-	return web.Response(w, nil, http.StatusNoContent)
+	return web.Respond(w, nil, http.StatusNoContent)
 }
