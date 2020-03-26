@@ -11,7 +11,6 @@ import (
 //
 // Including the queries directly in this file has the same pros/cons mentioned
 // in seeds.go
-
 var migrations = []darwin.Migration{
 	{
 		Version:     1,
@@ -41,6 +40,23 @@ CREATE TABLE sales (
 
 	PRIMARY KEY (sale_id),
 	FOREIGN KEY (product_id) REFERENCES products(product_id) ON DELETE CASCADE
+);`,
+	},
+	{
+		Version:     3,
+		Description: "Add users",
+		Script: `
+CREATE TABLE users (
+	user_id       UUID,
+	name          TEXT,
+	email         TEXT UNIQUE,
+	roles         TEXT[],
+	password_hash TEXT,
+
+	date_created TIMESTAMP,
+	date_updated TIMESTAMP,
+
+	PRIMARY KEY (user_id)
 );`,
 	},
 }
