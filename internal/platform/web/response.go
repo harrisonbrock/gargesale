@@ -1,12 +1,22 @@
 package web
 
 import (
+	"context"
 	"encoding/json"
 	"github.com/pkg/errors"
 	"net/http"
 )
 
-func Respond(w http.ResponseWriter, data interface{}, statusCode int) error {
+func Respond(ctx context.Context, w http.ResponseWriter, data interface{}, statusCode int) error {
+
+	v, ok := ctx.Value(KeyValues).(*Values)
+
+	if !ok {
+		return errors.New("web values missing from context")
+	}
+
+	v.StatusCode = statusCode
+
 	if statusCode == http.StatusNoContent {
 		w.WriteHeader(statusCode)
 		return nil
@@ -29,7 +39,7 @@ func Respond(w http.ResponseWriter, data interface{}, statusCode int) error {
 }
 
 // RespondError sends an error reponse back to the client.
-func RespondError(w http.ResponseWriter, err error) error {
+func RespondError(ctx context.Context, w http.ResponseWriter, err error) error {
 
 	// If the error was of the type *Error, the handler has
 	// a specific status code and error to return.
@@ -38,7 +48,7 @@ func RespondError(w http.ResponseWriter, err error) error {
 			Error:  webErr.Err.Error(),
 			Fields: webErr.Fields,
 		}
-		if err := Respond(w, er, webErr.Status); err != nil {
+		if err := Respond(ctx, w, er, webErr.Status); err != nil {
 			return err
 		}
 		return nil
@@ -48,7 +58,7 @@ func RespondError(w http.ResponseWriter, err error) error {
 	er := ErrorResponse{
 		Error: http.StatusText(http.StatusInternalServerError),
 	}
-	if err := Respond(w, er, http.StatusInternalServerError); err != nil {
+	if err := Respond(ctx, w, er, http.StatusInternalServerError); err != nil {
 		return err
 	}
 	return nil

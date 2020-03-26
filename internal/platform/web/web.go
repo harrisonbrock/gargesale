@@ -1,9 +1,11 @@
 package web
 
 import (
+	"context"
 	"github.com/go-chi/chi"
 	"log"
 	"net/http"
+	"time"
 )
 
 // Handler in signature that all applications handler will implement.
@@ -14,6 +16,15 @@ type App struct {
 	mux *chi.Mux
 	log *log.Logger
 	mw  []Middleware
+}
+
+type ctxKey int
+
+const KeyValues ctxKey = 1
+
+type Values struct {
+	StatusCode int
+	Start      time.Time
 }
 
 // NewApp knows how to construct a internal state for App.
@@ -29,12 +40,17 @@ func (a *App) Handle(method, pattern string, h Handler) {
 
 	h = wrapMiddleware(a.mw, h)
 	fn := func(w http.ResponseWriter, r *http.Request) {
+
+		v := Values{
+			StatusCode: 0,
+			Start:      time.Now(),
+		}
+		ctx := r.Context()
+		ctx = context.WithValue(ctx, KeyValues, &v)
+		r = r.WithContext(ctx)
+
 		if err := h(w, r); err != nil {
-			//a.log.Printf("ERROR : %v\n", err)
-			//
-			//if err := RespondError(w, err); err != nil {
-			//	a.log.Printf("ERROR : %v", err)
-			//}
+
 			a.log.Printf("Unhandled error: %+v", err)
 		}
 	}

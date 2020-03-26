@@ -2,6 +2,7 @@ package mid
 
 import (
 	"github.com/harrisonbrock/gargesale/internal/platform/web"
+	"github.com/pkg/errors"
 	"log"
 	"net/http"
 	"time"
@@ -14,16 +15,21 @@ func Logger(log *log.Logger) web.Middleware {
 
 		h := func(w http.ResponseWriter, r *http.Request) error {
 
-			start := time.Now()
+			v, ok := r.Context().Value(web.KeyValues).(*web.Values)
+
+			if !ok {
+				return errors.New("web values missing from context")
+			}
 
 			// Run the handler chain and catch any propagated error.
 			err := before(w, r)
 
 			//Log
 			log.Printf(
-				"%s %s (%v)",
+				"%d %s %s (%v)",
+				v.StatusCode,
 				r.Method, r.URL.Path,
-				time.Since(start),
+				time.Since(v.Start),
 			)
 			// Return nil to indicate the error has been handled.
 			return err
