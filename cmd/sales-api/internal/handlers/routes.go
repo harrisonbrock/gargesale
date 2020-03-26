@@ -10,7 +10,7 @@ import (
 
 func API(logger *log.Logger, db *sqlx.DB) http.Handler {
 
-	app := web.NewApp(logger, mid.Errors(logger))
+	app := web.NewApp(logger, mid.Logger(logger), mid.Errors(logger), mid.Metrics())
 
 	{
 		c := Check{DB: db}
