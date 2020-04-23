@@ -32,5 +32,10 @@ func API(logger *log.Logger, db *sqlx.DB) http.Handler {
 		app.Handle(http.MethodGet, "/v1/products/{id}/sales", p.ListSales)
 	}
 
+	{
+		u := Users{DB: db}
+		app.Handle(http.MethodGet, "/v1/users/token", u.Token)
+	}
+
 	return app
 }
