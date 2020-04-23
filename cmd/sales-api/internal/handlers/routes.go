@@ -2,13 +2,14 @@ package handlers
 
 import (
 	"github.com/harrisonbrock/gargesale/internal/mid"
+	"github.com/harrisonbrock/gargesale/internal/platform/auth"
 	"github.com/harrisonbrock/gargesale/internal/platform/web"
 	"github.com/jmoiron/sqlx"
 	"log"
 	"net/http"
 )
 
-func API(logger *log.Logger, db *sqlx.DB) http.Handler {
+func API(logger *log.Logger, db *sqlx.DB, authenticator *auth.Authenticator) http.Handler {
 
 	app := web.NewApp(logger, mid.Logger(logger), mid.Errors(logger), mid.Metrics())
 
@@ -33,7 +34,7 @@ func API(logger *log.Logger, db *sqlx.DB) http.Handler {
 	}
 
 	{
-		u := Users{DB: db}
+		u := Users{DB: db, authenticator: authenticator}
 		app.Handle(http.MethodGet, "/v1/users/token", u.Token)
 	}
 

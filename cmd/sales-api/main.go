@@ -2,13 +2,17 @@ package main
 
 import (
 	"context"
+	"crypto/rsa"
 	_ "expvar"
 	"fmt"
+	"github.com/dgrijalva/jwt-go"
 	"github.com/harrisonbrock/gargesale/cmd/sales-api/internal/handlers"
+	"github.com/harrisonbrock/gargesale/internal/platform/auth"
 	"github.com/harrisonbrock/gargesale/internal/platform/conf"
 	"github.com/harrisonbrock/gargesale/internal/platform/database"
 	_ "github.com/lib/pq"
 	"github.com/pkg/errors"
+	"io/ioutil"
 	"log"
 	"net/http"
 	_ "net/http/pprof"
@@ -42,6 +46,11 @@ func run() error {
 			Name       string `conf:"default:postgres"`
 			DisableTLS bool   `conf:"default:false"`
 		}
+		Auth struct {
+			KeyID          string `conf:"default:1"`
+			PrivateKeyFile string `conf:"default:private.pem"`
+			Algorithm      string `conf:"default:RS256"`
+		}
 	}
 	// =========================================================================
 
@@ -74,6 +83,17 @@ func run() error {
 	}
 	log.Printf("main : Config :\n%v\n", out)
 
+	// Initialize authentication support
+
+	authenticator, err := createAuth(
+		cfg.Auth.PrivateKeyFile,
+		cfg.Auth.KeyID,
+		cfg.Auth.Algorithm,
+	)
+	if err != nil {
+		return errors.Wrap(err, "constructing authenticator")
+	}
+
 	// Setup Dependencies
 	db, err := database.Open(database.Config{
 		Host:       cfg.DB.Host,
@@ -101,7 +121,7 @@ func run() error {
 
 	api := http.Server{
 		Addr:         cfg.Web.Address,
-		Handler:      handlers.API(log, db),
+		Handler:      handlers.API(log, db, authenticator),
 		ReadTimeout:  cfg.Web.ReadTimeout,
 		WriteTimeout: cfg.Web.WriteTimeout,
 	}
@@ -148,4 +168,21 @@ func run() error {
 		}
 	}
 	return nil
+}
+
+func createAuth(privateKeyFile, keyID, algorithm string) (*auth.Authenticator, error) {
+
+	keyContents, err := ioutil.ReadFile(privateKeyFile)
+	if err != nil {
+		return nil, errors.Wrap(err, "reading auth private key")
+	}
+
+	key, err := jwt.ParseRSAPrivateKeyFromPEM(keyContents)
+	if err != nil {
+		return nil, errors.Wrap(err, "parsing auth private key")
+	}
+
+	public := auth.NewSimpleKeyLookupFunc(keyID, key.Public().(*rsa.PublicKey))
+
+	return auth.NewAuthenticator(key, keyID, algorithm, public)
 }

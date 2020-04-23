@@ -2,9 +2,7 @@ package handlers
 
 import (
 	"context"
-	"fmt"
-
-	//"github.com/harrisonbrock/gargesale/internal/platform/auth"
+	"github.com/harrisonbrock/gargesale/internal/platform/auth"
 	"github.com/harrisonbrock/gargesale/internal/platform/web"
 	"github.com/harrisonbrock/gargesale/internal/user"
 	"github.com/jmoiron/sqlx"
@@ -14,18 +12,15 @@ import (
 
 // Users holds handlers for dealing with user.
 type Users struct {
-	DB *sqlx.DB
-	//authenticator *auth.Authenticator
+	DB            *sqlx.DB
+	authenticator *auth.Authenticator
 }
 
 // Token generates an authentication token for a user. The client must include
 // an email and password for the request using HTTP Basic Auth. The user will
 // be identified by email and authenticated by their password.
 func (u *Users) Token(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
-	//v, ok := ctx.Value(web.KeyValues).(*web.Values)
-	//if !ok {
-	//	return errors.New("web value missing from context")
-	//}
+
 	v, ok := ctx.Value(web.KeyValues).(*web.Values)
 
 	if !ok {
@@ -49,17 +44,13 @@ func (u *Users) Token(ctx context.Context, w http.ResponseWriter, r *http.Reques
 		}
 	}
 
-	//var tkn struct {
-	//	Token string `json:"token"`
-	//}
-	//tkn.Token, err = u.authenticator.GenerateToken(claims)
-	//if err != nil {
-	//	return errors.Wrap(err, "generating token")
-	//}
-	//
-	//return web.Respond(ctx, w, tkn, http.StatusOK)
-	_ = claims
+	var tkn struct {
+		Token string `json:"token"`
+	}
+	tkn.Token, err = u.authenticator.GenerateToken(claims)
+	if err != nil {
+		return errors.Wrap(err, "generating token")
+	}
 
-	fmt.Printf("%+v\n", claims)
-	return nil
+	return web.Respond(ctx, w, tkn, http.StatusOK)
 }
