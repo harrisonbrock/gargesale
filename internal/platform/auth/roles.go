@@ -6,6 +6,10 @@ import (
 	jwt "github.com/dgrijalva/jwt-go"
 )
 
+type ctxKey int
+
+const Key ctxKey = 1
+
 // These are the expected values for Claims.Roles.
 const (
 	RoleAdmin = "ADMIN"
