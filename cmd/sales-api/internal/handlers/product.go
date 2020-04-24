@@ -3,6 +3,7 @@ package handlers
 import (
 	"context"
 	"github.com/go-chi/chi"
+	"github.com/harrisonbrock/gargesale/internal/platform/auth"
 	"github.com/harrisonbrock/gargesale/internal/platform/web"
 	"github.com/harrisonbrock/gargesale/internal/product"
 	"github.com/jmoiron/sqlx"
@@ -53,12 +54,18 @@ func (p *Products) Retrieve(ctx context.Context, w http.ResponseWriter, r *http.
 // Create decode json document from a POST Request
 func (p *Products) Create(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 
+	claims, ok := ctx.Value(auth.Key).(auth.Claims)
+
+	if !ok {
+		return errors.New("auth claims not in context")
+	}
+
 	var np product.NewProduct
 	if err := web.Decode(r, &np); err != nil {
 		return err
 	}
 
-	prod, err := product.Create(ctx, p.DB, np, time.Now())
+	prod, err := product.Create(ctx, p.DB, claims, np, time.Now())
 	if err != nil {
 		return err
 	}
@@ -97,12 +104,18 @@ func (p *Products) ListSales(ctx context.Context, w http.ResponseWriter, r *http
 func (p *Products) Update(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 	id := chi.URLParam(r, "id")
 
+	claims, ok := ctx.Value(auth.Key).(auth.Claims)
+
+	if !ok {
+		return errors.New("auth claims not in context")
+	}
+
 	var update product.UpdateProduct
 	if err := web.Decode(r, &update); err != nil {
 		return errors.Wrap(err, "decoding product update")
 	}
 
-	if err := product.Update(ctx, p.DB, id, update, time.Now()); err != nil {
+	if err := product.Update(ctx, p.DB, claims, id, update, time.Now()); err != nil {
 		switch err {
 		case product.ErrNotFound:
 			return web.NewRequestError(err, http.StatusNotFound)
